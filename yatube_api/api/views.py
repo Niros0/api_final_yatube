@@ -47,7 +47,8 @@ class FollowViewSet(viewsets.ModelViewSet):
     search_fields = ('following__username',)
 
     def get_serializer_class(self):
-        return FollowGetSerializer if self.request.method == 'GET' else FollowPostSerializer
+        method = self.request.method
+        return FollowGetSerializer if method == 'GET' else FollowPostSerializer
 
     def get_queryset(self):
         queryset = Follow.objects.filter(user=self.request.user)
@@ -59,9 +60,16 @@ class FollowViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         following = serializer.validated_data.get('following')
         if following == self.request.user:
-            raise serializers.ValidationError({"following": "Вы не можете подписаться на самого себя"})
-        if Follow.objects.filter(user=self.request.user, following=following).exists():
-            raise serializers.ValidationError({"following": "Вы уже подписаны на этого пользователя"})
+            raise serializers.ValidationError(
+                {"following": "Вы не можете подписаться на самого себя"}
+            )
+        if (
+            Follow.objects.filter(user=self.request.user, following=following)
+            .exists()
+        ):
+            raise serializers.ValidationError(
+                {"following": "Вы уже подписаны на этого пользователя"}
+            )
         serializer.save(user=self.request.user)
 
     http_method_names = ['get', 'post']
