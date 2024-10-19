@@ -16,7 +16,10 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="username"
+    )
 
     class Meta:
         fields = "__all__"
@@ -32,9 +35,15 @@ class GroupSerializer(serializers.ModelSerializer):
 
 
 class FollowGetSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="username"
+    )
 
-    following = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    following = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="username"
+    )
 
     class Meta:
         model = Follow
@@ -42,9 +51,13 @@ class FollowGetSerializer(serializers.ModelSerializer):
 
 
 class FollowPostSerializer(serializers.ModelSerializer):
-    user = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    user = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field="username"
+    )
     following = serializers.SlugRelatedField(
-        slug_field="username", queryset=User.objects.all()
+        slug_field="username", 
+        queryset=User.objects.all()
     )
 
     class Meta:

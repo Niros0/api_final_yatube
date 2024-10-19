@@ -1,9 +1,7 @@
 from rest_framework import viewsets
-from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import serializers
-from rest_framework.permissions import IsAuthenticated
 
 from .permissions import PostOrReadOnly
 from posts.models import Post, Comment, Group, Follow
@@ -23,16 +21,6 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def perform_update(self, serializer):
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        super().perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        if instance.author != self.request.user:
-            raise PermissionDenied('Удаление чужого контента запрещено!')
-        super().perform_destroy(instance)
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
@@ -43,22 +31,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         post = get_object_or_404(Post, id=self.kwargs['post_id'])
         return Comment.objects.filter(post=post)
 
-    def _save_comment(self, serializer):
+    def perform_create(self, serializer):
         post = get_object_or_404(Post, id=self.kwargs['post_id'])
         serializer.save(author=self.request.user, post=post)
-
-    def perform_create(self, serializer):
-        self._save_comment(serializer)
-
-    def perform_update(self, serializer):
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого комментария запрещено!')
-        self._save_comment(serializer)
-
-    def perform_destroy(self, instance):
-        if instance.author != self.request.user:
-            raise PermissionDenied('Удаление чужого комментария запрещено!')
-        super().perform_destroy(instance)
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -69,14 +44,10 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 class FollowViewSet(viewsets.ModelViewSet):
     queryset = Follow.objects.all()
-    permission_classes = (IsAuthenticated,)
     search_fields = ('following__username',)
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return FollowGetSerializer
-        elif self.request.method == 'POST':
-            return FollowPostSerializer
+        return FollowGetSerializer if self.request.method == 'GET' else FollowPostSerializer
 
     def get_queryset(self):
         queryset = Follow.objects.filter(user=self.request.user)
