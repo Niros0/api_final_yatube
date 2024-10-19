@@ -16,7 +16,10 @@ API для управления публикациями, комментария
 ## Установка
 Чтобы развернуть проект на локальной машине, выполните следующие шаги:
 
-Шаг 1: ```git clone git@github.com:Niros0/api_final_yatube.git```
+Шаг 1: 
+```
+git clone git@github.com:Niros0/api_final_yatube.git
+```
 
 Шаг 2: Установить необходимые зависимости
 pip install -r requirements.txt
