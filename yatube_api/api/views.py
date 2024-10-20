@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from django.shortcuts import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework import serializers
+from rest_framework import mixins, viewsets
 
 from .permissions import PostOrReadOnly
 from posts.models import Post, Comment, Group, Follow
@@ -42,9 +42,12 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (PostOrReadOnly,)
 
 
-class FollowViewSet(viewsets.ModelViewSet):
+class FollowViewSet(mixins.ListModelMixin,
+                    mixins.CreateModelMixin,
+                    viewsets.GenericViewSet
+                    ):
     queryset = Follow.objects.all()
-    search_fields = ('following__username',)
+    search_fields = ('following__username', 'user__username')
 
     def get_serializer_class(self):
         method = self.request.method
@@ -58,18 +61,6 @@ class FollowViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        following = serializer.validated_data.get('following')
-        if following == self.request.user:
-            raise serializers.ValidationError(
-                {"following": "Вы не можете подписаться на самого себя"}
-            )
-        if (
-            Follow.objects.filter(user=self.request.user, following=following)
-            .exists()
-        ):
-            raise serializers.ValidationError(
-                {"following": "Вы уже подписаны на этого пользователя"}
-            )
         serializer.save(user=self.request.user)
 
     http_method_names = ['get', 'post']
